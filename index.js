@@ -3,6 +3,7 @@
 
 // init project
 var express = require('express');
+var moment = require('moment-timezone');
 var app = express();
 
 // enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
@@ -19,17 +20,22 @@ app.get("/", function (req, res) {
 });
 
 
+
 // your first API endpoint... 
 app.get("/api/:date?", function (req, res) {
-  let date = new Date(req.params.date);
-  if(isNaN(date)){
-    date = new Date(parseInt(req.params.date))
+  let date = new moment();
+  const UNIX_MULTIPLIER = 1000;
+
+  if(moment(req.params.date).isValid()){
+    date = moment(req.params.date);
   }
-  if(isNaN(date)){
-    res.json({error: "invalid Date"})
-  }else{
-    res.json({unix: date.getTime()/1000, utc: date.toUTCString()}); 
+  else if(moment.unix(req.params.date).isValid()){
+    date = moment.unix(parseInt(req.params.date) / UNIX_MULTIPLIER);
   }
+  else{
+    res.json({error: "Invalid Date"})
+  }
+  res.json({unix: date.unix()*UNIX_MULTIPLIER, utc: date.tz('GMT').format('ddd, D MMM YYYY HH:mm:ss z')}); 
 });
 
 
